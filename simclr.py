@@ -58,6 +58,8 @@ def main():
     val_dataloader = get_val_dataloader(p, val_dataset)
     print('Dataset contains {}/{} train/val samples'.format(len(train_dataset), len(val_dataset)))
     
+    if True: return
+
     # Memory Bank
     print(colored('Build MemoryBank', 'blue'))
     base_dataset = get_train_dataset(p, val_transforms, split='train') # Dataset w/o augs for knn eval
