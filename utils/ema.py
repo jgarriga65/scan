@@ -4,6 +4,7 @@ Licensed under the CC BY-NC 4.0 license (https://creativecommons.org/licenses/by
 """
 
 class EMA(object):
+    
     def __init__(self, model, alpha=0.999):
         self.shadow = {k: v.clone().detach() for k, v in model.state_dict().items()}
         self.param_keys = [k for k, _ in model.named_parameters()]

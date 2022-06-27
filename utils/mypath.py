@@ -12,10 +12,10 @@ class MyPath(object):
         assert(database in db_names)
 
         if database == 'cifar-10':
-            return './vdisk/scan/datasets/cifar10/'
+            return './datasets/cifar10/'
         
         elif database == 'cifar-20':
-            return './vdisk/scan/datasets/cifar20/'
+            return './datasets/cifar20/'
 
         elif database == 'stl-10':
             return '/path/to/stl-10/'
@@ -24,10 +24,10 @@ class MyPath(object):
             return '/path/to/imagenet/'
 
         elif database == '2014':
-            return './vdisk/data/2014/'
+            return './datasets/2014/'
 
         elif database == '2015':
-            return './vdisk/data/2015/'
+            return './datasets/2015/'
         
         else:
             raise NotImplementedError

@@ -1,0 +1,155 @@
+# Dataset
+dataset_name: cifar10
+root: './datasets/cifar10'
+trainSize: 20000
+validSize: 1000
+seed: 1234
+
+# Outputfolder
+output: './output/cifar10'
+
+# distributed data parallelism (DDP)
+ddp: False
+
+# model backbone
+backbone: resnet18
+
+# raw transform image size
+image_size: 64
+
+# Contrastive Learning
+S1:
+
+  # clustering params
+  num_classes: 10
+
+  # Model
+  model_kwargs:
+    head: mlp
+    features_dim: 128
+
+  # Loss
+  criterion: simclr
+  criterion_kwargs:
+    temperature: 0.1 
+
+  # Hyperparameters
+  epochs: 200
+  optimizer: sgd
+  optimizer_kwargs:
+    nesterov: False
+    lr: 0.4
+    weight_decay: 0.0001 
+    momentum: 0.9
+  scheduler: cosine
+  scheduler_kwargs:
+    lr_decay_rate: 0.1
+  batch_size: 200
+  batch_info: 20
+  num_workers: 8
+  evaluate: False
+
+  # Transformations
+  augmentation_strategy: simclr 
+  transformation_kwargs:
+    resize: 64
+  augmentation_kwargs:
+    random_resized_crop:
+        size: 64
+        scale: [0.4, 0.9]
+    color_jitter_random_apply:
+        p: 0.8
+    color_jitter:
+        brightness: 0.4
+        contrast: 0.4
+        saturation: 0.4
+        hue: 0.1
+    random_grayscale: 
+        p: 0.2
+
+# SCAN
+S2:
+
+  # clustering params
+  num_classes: 10
+  num_neighbors: 4
+
+  # Loss
+  criterion: scan
+  criterion_kwargs:
+    entropy_weight: 15.0  # check that entropy does not decrease and keeps (for 10 classes) around 2.30
+
+  # Weight update
+  num_heads: 1 # Only use one head
+  update_cluster_head_only: False # Update full network
+
+  # Transformations
+  augmentation_strategy: scan
+  transformation_kwargs:
+    resize: 64
+  augmentation_kwargs:
+    crop_size: 32
+    num_strong_augs: 4
+    cutout_kwargs:
+      n_holes: 1
+      length: 8
+      random: True
+
+  # Hyperparameters
+  optimizer: adam
+  optimizer_kwargs:
+    lr: 0.00005
+    weight_decay: 0.000005
+  scheduler: cosine
+  scheduler_kwargs:
+    lr_decay_rate: 0.1
+  epochs: 100
+  batch_size: 400
+  batch_info: 50
+  num_workers: 8
+  evaluate: True
+
+# Estereo-typing
+S3:
+
+  # clustering params
+  num_classes: 10
+
+  # ema
+  use_ema: False
+
+  # Criterion
+  criterion: confidence-cross-entropy
+  criterion_kwargs:
+    confidence_quantile: 0.90
+    apply_class_balancing: True
+
+  # Weight update
+  num_heads: 1
+  update_cluster_head_only: False
+
+  # Transformations
+  augmentation_strategy: scan 
+  transformation_kwargs:
+    resize: 64
+  augmentation_kwargs:
+    crop_size: 32
+    num_strong_augs: 4
+    cutout_kwargs:
+      n_holes: 1
+      length: 8
+      random: True
+
+  # Hyperparameters
+  epochs: 50
+  optimizer: adam
+  optimizer_kwargs:
+    lr: 0.00005
+    weight_decay: 0.000005
+  scheduler: cosine
+  scheduler_kwargs:
+    lr_decay_rate: 0.1
+  batch_size: 400  # must be large enough to ensure a minimum of examples with score > confidence_threshold
+  batch_info: 50
+  num_workers: 8
+  evaluate: True

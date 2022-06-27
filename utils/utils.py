@@ -7,6 +7,7 @@ import torch
 import numpy as np
 import errno
 
+
 def mkdir_if_missing(directory):
     if not os.path.exists(directory):
         try:
@@ -54,20 +55,6 @@ class ProgressMeter(object):
         num_digits = len(str(num_batches // 1))
         fmt = '{:' + str(num_digits) + 'd}'
         return '[' + fmt + '/' + fmt.format(num_batches) + ']'
-
-
-@torch.no_grad()
-def fill_memory_bank(loader, model, memory_bank):
-    model.eval()
-    memory_bank.reset()
-
-    for i, batch in enumerate(loader):
-        images = batch['image'].cuda(non_blocking=True)
-        targets = batch['target'].cuda(non_blocking=True)
-        output = model(images)
-        memory_bank.update(output, targets)
-        if i % 100 == 0:
-            print('Fill Memory Bank [%d/%d]' %(i, len(loader)))
 
 
 def confusion_matrix(predictions, gt, class_names, output_file=None):

@@ -7,9 +7,11 @@ import torch.nn.functional as F
 
 
 class BasicBlock(nn.Module):
+
     expansion = 1
 
     def __init__(self, in_planes, planes, stride=1, is_last=False):
+
         super(BasicBlock, self).__init__()
         self.is_last = is_last
         self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False)
@@ -25,6 +27,7 @@ class BasicBlock(nn.Module):
             )
 
     def forward(self, x):
+        
         out = F.relu(self.bn1(self.conv1(x)))
         out = self.bn2(self.conv2(out))
         out += self.shortcut(x)
@@ -70,7 +73,9 @@ class Bottleneck(nn.Module):
 
 
 class ResNet(nn.Module):
+
     def __init__(self, block, num_blocks, in_channel=3, zero_init_residual=False):
+
         super(ResNet, self).__init__()
         self.in_planes = 64
 

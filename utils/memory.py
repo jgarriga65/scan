@@ -5,9 +5,24 @@ Licensed under the CC BY-NC 4.0 license (https://creativecommons.org/licenses/by
 import numpy as np
 import torch
 
+@torch.no_grad()
+def fill_memory_bank(loader, model, memory_bank):
+
+    model.eval()
+    memory_bank.reset()
+
+    for i, batch in enumerate(loader):
+        images = batch['image'].cuda(non_blocking=True)
+        targets = batch['target'].cuda(non_blocking=True)
+        output = model(images)
+        memory_bank.update(output, targets)
+        if i % 100 == 0:
+            print('Fill Memory Bank [%d/%d]' %(i, len(loader)))
 
 class MemoryBank(object):
+
     def __init__(self, n, dim, num_classes, temperature):
+
         self.n = n
         self.dim = dim 
         self.features = torch.FloatTensor(self.n, self.dim)
@@ -19,12 +34,13 @@ class MemoryBank(object):
         self.C = num_classes
 
     def weighted_knn(self, predictions):
+
         # perform weighted knn
         retrieval_one_hot = torch.zeros(self.K, self.C).to(self.device)
         batchSize = predictions.shape[0]
         correlation = torch.matmul(predictions, self.features.t())
         yd, yi = correlation.topk(self.K, dim=1, largest=True, sorted=True)
-        candidates = self.targets.view(1,-1).expand(batchSize, -1)
+        candidates = self.targets.view(1, -1).expand(batchSize, -1)
         retrieval = torch.gather(candidates, 1, yi)
         retrieval_one_hot.resize_(batchSize * self.K, self.C).zero_()
         retrieval_one_hot.scatter_(1, retrieval.view(-1, 1), 1)
@@ -37,13 +53,15 @@ class MemoryBank(object):
         return class_pred
 
     def knn(self, predictions):
+
         # perform knn
         correlation = torch.matmul(predictions, self.features.t())
         sample_pred = torch.argmax(correlation, dim=1)
         class_pred = torch.index_select(self.targets, 0, sample_pred)
         return class_pred
 
-    def mine_nearest_neighbors(self, topk, calculate_accuracy=True):
+    def mine_nearest_neighbors(self, topk, calculate_accuracy = True):
+
         # mine the topk nearest neighbors for every sample
         import faiss
         features = self.features.cpu().numpy()
@@ -68,6 +86,7 @@ class MemoryBank(object):
         self.ptr = 0 
         
     def update(self, features, targets):
+        
         b = features.size(0)
         
         assert(b + self.ptr <= self.n)
@@ -86,3 +105,4 @@ class MemoryBank(object):
 
     def cuda(self):
         self.to('cuda:0')
+
