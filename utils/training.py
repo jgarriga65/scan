@@ -46,8 +46,6 @@ def cl_train(_iScan, epoch, _rank):
     # summaryWriter
     if _iScan.writer is not None:
         _iScan.writer.add_scalar('step1_loss', avgLoss /(i +1), epoch)
-    
-    return avgLoss /i
 
 
 def scan_train(_iScan, epoch, update_cluster_head_only = False):
@@ -109,7 +107,7 @@ def scan_train(_iScan, epoch, update_cluster_head_only = False):
 
     # summaryWriter
     if _iScan.writer is not None:
-        _iScan.writer.add_scalar('step2_loss', step2_loss /(i +1), epoch)
+        _iScan.writer.add_scalar('step2_trainLoss', step2_loss /(i +1), epoch)
 
 
 def selflabel_train(_iScan, epoch):

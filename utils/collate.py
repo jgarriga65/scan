@@ -5,8 +5,7 @@ Licensed under the CC BY-NC 4.0 license (https://creativecommons.org/licenses/by
 import torch
 import numpy as np
 import collections
-# from torch._six import string_classes, int_classes
-from torch._six import string_classes
+from torch._six import string_classes, int_classes
 
 
 """ Custom collate function """
@@ -20,8 +19,7 @@ def collate_custom(batch):
     elif isinstance(batch[0], np.ndarray):
         return np.stack(batch, 0)
 
-    # elif isinstance(batch[0], int_classes):
-    elif isinstance(batch[0], int):
+    elif isinstance(batch[0], int_classes):
         return torch.LongTensor(batch)
 
     elif isinstance(batch[0], float):

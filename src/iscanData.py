@@ -10,7 +10,7 @@ from termcolor import colored
 from torchvision import transforms
 
 from utils.collate import collate_custom
-from utils.augment import Augment, Cutout
+from utils.augment2 import Augment, Cutout
 
 import time
 
@@ -25,27 +25,24 @@ class iScanDataset():
         self.augTransform = _iScan.dataset.augTransform
 
         if mode == 'train':
-            self.training = True
             self.data = _iScan.dataset.trainSet['data']
             self.labels = _iScan.dataset.trainSet['class']
             if self.step == 'S2':
-                self.neighborSet = np.load('%s/S1_topk_train_neighbours.npy' %_iScan.folder)[:, :5 +1]
+                self.neighborSet = np.load('%s/S1_topk_train_neighbours.npy' %_iScan.folder)[:, 1: _iScan.config['S2']['num_neighbors'] +1]
                 assert(self.neighborSet.shape[0] == len(self.data))
 
         elif mode == 'valid':
-            self.training = False
             self.data = _iScan.dataset.validSet['data']
             self.labels = _iScan.dataset.validSet['class']
             if self.step == 'S2':
-                self.neighborSet = np.load('%s/S1_topk_val_neighbours.npy' %_iScan.folder)[:, :5 +1]
+                self.neighborSet = np.load('%s/S1_topk_val_neighbours.npy' %_iScan.folder)[:, 1: _iScan.config['S2']['num_neighbors'] +1]
                 assert(self.neighborSet.shape[0] == len(self.data))
 
         elif mode == 'eval':
-            self.training = False
             self.data = _iScan.dataset.trainSet['data']
             self.labels = _iScan.dataset.trainSet['class']
             if self.step == 'S2':
-                self.neighborSet = np.load('%s/S1_topk_eval_neighbours.npy' %_iScan.folder)[:, :5 +1]
+                self.neighborSet = np.load('%s/S1_topk_eval_neighbours.npy' %_iScan.folder)[:, 1: _iScan.config['S2']['num_neighbors'] +1]
                 assert(self.neighborSet.shape[0] == len(self.data))
         
     def __len__(self):
@@ -101,7 +98,7 @@ class iScanData():
         else:
             return torch.utils.data.DataLoader(_dataset, num_workers = self.config[self.step]['num_workers'], 
             batch_size = self.config[self.step]['batch_size'], pin_memory = True, collate_fn = collate_custom,
-            drop_last = _dataset.training, shuffle = _dataset.training)
+            drop_last = (mode == 'train'), shuffle = (mode == 'train'))
 
     def getRawTransform(self, imgSize = 0):
 

@@ -111,12 +111,13 @@ class iScanTrain():
         if (save and self.start_epoch < self.config[self.step]['epochs']):
             torch.save({'model': self.model.state_dict()}, '%s/%s_model.pth.tar' % (self.folder, self.step))
 
-    def step1_saveMemoryBank(self):
+    def step1_saveMemoryBank(self, topk = 10):
 
-        # Mine the topk nearest neighbors at the very end (for the training set, shuffled !!!)
-        # These will be served as input to the SCAN loss.
-        topk = 10
+        # Mine the topk nearest neighbors at the very end
+        # topk is the max number of neighbors for config['S2']['num_neighbors']
         print('Mine the nearest neighbors (Top-%d)' %(topk)) 
+
+        # These will be served as input to the SCAN loss.
         loader = self.getDataLoader('train')
         self.getMemoryBank(loader = loader, device = 'cuda')
         self.memory_bank.cpu()
@@ -124,10 +125,7 @@ class iScanTrain():
         print('Accuracy of top-%d faiss nearest neighbors on train set is %.2f' %(topk, 100 *acc))
         np.save('%s/%s_topk_train_neighbours.npy' % (self.folder, self.step), indices)   
 
-        # Mine the topk nearest neighbors at the very end (for the eval set, same as train set but NOT suffled !!!)
-        # These will be used for evaluation purposes
-        topk = 10
-        print('Mine the nearest neighbors (Top-%d)' %(topk)) 
+        # These will be used for evaluation purposes (for the eval set, same as train set but NOT suffled !!!)
         loader = self.getDataLoader('eval')
         self.getMemoryBank(loader = loader, device = 'cuda')
         self.memory_bank.cpu()
@@ -135,10 +133,7 @@ class iScanTrain():
         print('Accuracy of top-%d faiss nearest neighbors on train set is %.2f' %(topk, 100 *acc))
         np.save('%s/%s_topk_eval_neighbours.npy' % (self.folder, self.step), indices)   
 
-        # Mine the topk nearest neighbors at the very end (for the validtion set)
         # These will be used for validation.
-        topk = 5
-        print('Mine the nearest neighbors (Top-%d)' %(topk)) 
         loader = self.getDataLoader('valid')
         self.getMemoryBank(loader = loader, device = 'cuda')
         self.memory_bank.cpu()
@@ -183,6 +178,10 @@ class iScanTrain():
             else:
                 self.print('No new lowest loss on validation set: %.4f -> %.4f' %(self.best_loss, lowest_loss))
                 self.print('Lowest loss head is %d' %(self.best_loss_head))
+
+            # summaryWriter
+            if self.writer is not None:
+                self.writer.add_scalar('step2_valLoss', lowest_loss, epoch)
 
             # Epoch Evaluate (hungarian_evaluate())
             if self.config[self.step]['evaluate']:

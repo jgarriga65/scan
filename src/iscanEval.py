@@ -286,7 +286,7 @@ class iScanEval():
         self.writer.add_images(plotTag, batch)
         self.writer.close()
 
-    def clean(self, threshold = 0.999, delete = False, exclude = []):
+    def clean(self, threshold = 0.999, delete = False, include = []):
 
         self.step = 'S1'
         self.getFinalModel()
@@ -299,7 +299,7 @@ class iScanEval():
         loader = self.getDataLoader('eval')
         self.getMemoryBank(loader = loader, device = 'cuda')
 
-        idxList, jList, fNameList = [], [], []
+        idxList, fNameList = [], []
         for batch in loader:
             images = batch['image'].cuda(non_blocking = True)
             output = self.model(images)
@@ -311,11 +311,13 @@ class iScanEval():
                     i = idx.item()
                     d = np.round(nghbDst[1].item(), 8)
                     j = nghbIdx[1].item()
-                    if d > threshold and j > i:
-                        print(i, j, d, self.dataset.trainSet['data'][j].split('/')[-1])
+                    if d > threshold and j not in idxList and i not in idxList:
+                        # print(len(fNameList) +1, i, j, d, self.dataset.trainSet['data'][j].split('/')[-1])
+                        print(len(fNameList) +1, i, j, d)
+                        print(self.dataset.trainSet['data'][i])
+                        print(self.dataset.trainSet['data'][j])
                         idxList.append(i)
                         idxList.append(j)
-                        jList.append(j)
                         fNameList.append(self.dataset.trainSet['data'][j])
             else:
                 # this mode finds real duplicates
@@ -324,15 +326,16 @@ class iScanEval():
                     d = np.round(nghbDst[0].item(), 8)
                     j = nghbIdx[0].item()
                     if j > i:
-                        print(i, j, d, self.dataset.trainSet['data'][j].split('/')[-1])
+                        print(len(fNameList) +1, i, j, d)
+                        print(self.dataset.trainSet['data'][i])
+                        print(self.dataset.trainSet['data'][j])
                         idxList.append(i)
                         idxList.append(j)
-                        jList.append(j)
                         fNameList.append(self.dataset.trainSet['data'][j])
 
         if delete:
-            for j, fName in zip(jList, fNameList):
-                if j not in exclude and os.path.exists(fName):
+            for j, fName in enumerate(fNameList):
+                if (not len(include) or j +1 in include) and os.path.exists(fName):
                     os.remove(fName)
         else:
             if len(idxList):

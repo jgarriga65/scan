@@ -1,9 +1,9 @@
 # Dataset
 dataset_name: species
-root: '/home/ubuntu/vDani/fSpecies/data0/train/aegypti'
-trainSize: 1000
-validSize: 100
-seed: 1988
+root: '/home/ubuntu/vDani/fSpecies/data/data0/train'
+trainSize: 5000
+validSize: 500
+seed: 4567
 
 # Outputfolder
 output: './output/species'
@@ -21,7 +21,7 @@ image_size: 256
 S1:
 
   # clustering params
-  num_classes: 8
+  num_classes: 10
 
   # Model
   model_kwargs:
@@ -34,18 +34,18 @@ S1:
     temperature: 0.10 
 
   # Hyperparameters
-  epochs: 250
+  epochs: 100
   optimizer: sgd
   optimizer_kwargs:
     nesterov: False
-    lr: 0.4
+    lr: 0.5
     weight_decay: 0.0001 
     momentum: 0.9
   scheduler: cosine
   scheduler_kwargs:
     lr_decay_rate: 0.1
   batch_size: 100
-  batch_info: 50
+  batch_info: 100
   num_workers: 8
   evaluate: False
 
@@ -71,47 +71,47 @@ S1:
 S2:
 
   # clustering params
-  num_classes: 6
-  num_neighbors: 4
+  num_classes: 10
+  num_neighbors: 3
 
   # Loss
   criterion: scan
   criterion_kwargs:
-    entropy_weight: 3.0
+    entropy_weight: 2.71  # 3 *log2(8) /log2(num_classes) = 3 (for num_classes = 8)
 
   # Weight update
   num_heads: 1
   update_cluster_head_only: False # Update full network
 
-  # # Transformations
-  # augmentation_strategy: scan
-  # transformation_kwargs:
-  #   resize: 256
-  # augmentation_kwargs:
-  #   crop_size: 128
-  #   num_strong_augs: 4
-  #   cutout_kwargs:
-  #     n_holes: 1
-  #     length: 16
-  #     random: True
-
   # Transformations
-  augmentation_strategy: simclr
+  augmentation_strategy: scan
   transformation_kwargs:
     resize: 256
   augmentation_kwargs:
-    random_resized_crop:
-        size: 256
-        scale: [0.5, 0.9]
-    color_jitter_random_apply:
-        p: 0.8
-    color_jitter:
-        brightness: 0.4
-        contrast: 0.4
-        saturation: 0.4
-        hue: 0.1
-    random_grayscale: 
-        p: 0.2
+    crop_size: 224
+    num_strong_augs: 2
+    cutout_kwargs:
+      n_holes: 4
+      length: 12
+      random: True
+
+  # # Transformations
+  # augmentation_strategy: simclr
+  # transformation_kwargs:
+  #   resize: 256
+  # augmentation_kwargs:
+  #   random_resized_crop:
+  #       size: 256
+  #       scale: [0.5, 0.9]
+  #   color_jitter_random_apply:
+  #       p: 0.8
+  #   color_jitter:
+  #       brightness: 0.4
+  #       contrast: 0.4
+  #       saturation: 0.4
+  #       hue: 0.1
+  #   random_grayscale: 
+  #       p: 0.2
 
   # Hyperparameters
   optimizer: adam
@@ -121,7 +121,7 @@ S2:
   scheduler: cosine
   scheduler_kwargs:
     lr_decay_rate: 0.1
-  epochs: 100
+  epochs: 50
   batch_size: 200
   batch_info: 50
   num_workers: 8
@@ -131,7 +131,7 @@ S2:
 S3:
 
   # clustering params
-  num_classes: 6
+  num_classes: 10
 
   # ema
   use_ema: False
@@ -139,7 +139,7 @@ S3:
   # Criterion
   criterion: confidence-cross-entropy
   criterion_kwargs:
-    confidence_quantile: 0.90
+    confidence_quantile: 0.50
     apply_class_balancing: True
 
   # Weight update
@@ -151,15 +151,15 @@ S3:
   transformation_kwargs:
     resize: 256
   augmentation_kwargs:
-    crop_size: 128
-    num_strong_augs: 4
+    crop_size: 224
+    num_strong_augs: 2
     cutout_kwargs:
-      n_holes: 1
-      length: 16
+      n_holes: 4
+      length: 12
       random: True
 
   # Hyperparameters
-  epochs: 100
+  epochs: 50
   optimizer: adam
   optimizer_kwargs:
     lr: 0.00005
@@ -167,7 +167,8 @@ S3:
   scheduler: cosine
   scheduler_kwargs:
     lr_decay_rate: 0.1
-  batch_size: 200  # must be large enough to ensure a minimum of examples with score > confidence_threshold
+  batch_size: 200  # large enough to ensure a minimum of examples with score > confidence_threshold
   batch_info: 50
   num_workers: 8
   evaluate: False
+ 

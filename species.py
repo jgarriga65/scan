@@ -17,17 +17,34 @@ class Species():
 
     def __init__(self, config):
         
-        fullDataset = [os.path.join(config['root'], f) for f in os.listdir(config['root'])]
+        fullDataset = []
+        for d1 in ['train', 'val', 'test']:
+            root = os.path.join(config['root'], d1)
+            # for d2 in os.listdir(root):
+                # [fullDataset.append(os.path.join(root, d2, f)) for f in os.listdir(os.path.join(root, d2))]
+            for d2 in ['unidentifiable', 'aegypti', 'albopictus', 'japonicus-koreicus']:
+                [fullDataset.append(os.path.join(root, d2, f)) for f in os.listdir(os.path.join(root, d2))]
 
-        np.random.seed(seed =config['seed'])
-        sample = np.random.choice(fullDataset, config['trainSize'] +config['validSize'], replace = False)
+        # fullDataset = [os.path.join(config['root'], f) for f in os.listdir(config['root'])]
 
         # class labels
         labels = [0] *len(fullDataset)
 
-        # mandatory
-        self.trainSet = {'data': sample[:config['trainSize']], 'class' : labels[:config['trainSize']]}
-        self.validSet = {'data': sample[config['trainSize']:], 'class' : labels[config['trainSize']:]}
+        if config['trainSize'] > 0:
+
+            np.random.seed(seed =config['seed'])
+            sample = np.random.choice(fullDataset, config['trainSize'] +config['validSize'], replace = False)
+
+            # mandatory
+            self.trainSet = {'data': sample[:config['trainSize']], 'class' : labels[:config['trainSize']]}
+            self.validSet = {'data': sample[config['trainSize']:], 'class' : labels[config['trainSize']:]}
+
+        else:
+
+            # this is only for cleaning purposes (!!!)
+            self.trainSet = {'data': fullDataset, 'class' : labels}
+            self.validSet = {'data': [], 'class' : []}
+        
         self.classNames = ['class%s' %str(c) for c in range(config['S1']['num_classes'])]
 
     def getRawImage(self, mode, index):
@@ -53,7 +70,7 @@ class Species():
             else:
                 original = self.rawTransform(pilImg)
 
-            if self.training and self.augTransform is not None:
+            if self.augTransform is not None:
                 augmented = self.augTransform(pilImg)
             else:
                 augmented = torch.empty(0, 3)
@@ -73,14 +90,14 @@ class Species():
             pilImg1 = Image.open(self.data[index]).convert('RGB')
             pilImg2 = Image.open(self.data[neighbor_index]).convert('RGB')
 
-            if self.valTransform is not None:
+            if self.augTransform is not None:
+                anchor = self.augTransform(pilImg1)
+                neighbor = self.augTransform(pilImg2)
+            elif self.valTransform is not None:
                 anchor = self.valTransform(pilImg1)
+                neighbor = self.valTransform(pilImg2)
             else:
                 anchor = self.rawTransform(pilImg1)
-
-            if self.training and self.augTransform is not None:
-                neighbor = self.augTransform(pilImg2)
-            else:
                 neighbor = self.rawTransform(pilImg2)
             
             item = {'image': anchor, 'neighbor': neighbor, 'neighborSet': torch.from_numpy(self.neighborSet[index]), 'target': torch.tensor(self.labels[index]), 'index': index}
